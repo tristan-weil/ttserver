@@ -23,4 +23,4 @@ echo "Building Docker..."
 docker build -t latest .
 
 echo "Starting Docker..."
-docker run -it --rm --name ttserver -p 7070:7070 latest
+docker run -it --rm --name ttserver -p 7070:7272 -e TTSERVER_LISTENER_ADDRESS=0.0.0.0:7272 latest

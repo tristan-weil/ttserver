@@ -414,6 +414,7 @@ See [examples](examples) for some configurations.
 Common:
 - make the linters happy
 - tests
+- use lib viper to handle confs
 
 Listener:
 - allow to listen on multiple addresses

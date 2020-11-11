@@ -76,6 +76,11 @@ func (m *Manager) readConfig() error {
 	// SPACE
 	//
 
+	// LISTENER
+	if envListenerAddress := os.Getenv("TTSERVER_LISTENER_ADDRESS"); envListenerAddress != "" {
+		jsonConfig.Space.Listener.Address = ttutils.String(envListenerAddress)
+	}
+
 	// TLS           *TLSConfig `json:"tls,omitempty"`
 	if jsonConfig.Space.Listener.TLSConfig != nil {
 		if jsonConfig.Space.Listener.TLSConfig.ACME != nil {
