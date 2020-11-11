@@ -1,0 +1,56 @@
+---
+
+style: github
+template: CHANGELOG.md.tpl
+info:
+  title: CHANGELOG
+  repository_url: https://github.com/tristan-weil/ghaction-checksum-sign-artifact
+
+options:
+  commits:
+    filters:
+      Type:
+        - feat
+        - fix
+        - perf
+        - refactor
+        - doc
+        - chore
+
+  commit_groups:
+    title_maps:
+      feat: 🚀 Features
+      fix: 🐛 Bug Fixes
+      perf: 🚄 Performance Improvements
+      refactor: 🛠️ Code Refactoring
+      doc: 📚 Documentation
+      chore: 🍱 Chore
+
+  header:
+    pattern: "^(\\w*)\\:\\s(.*)$"
+    pattern_maps:
+      - Type
+      - Subject
+
+  issues:
+    prefix:
+      - #
+
+  refs:
+    actions:
+      - Closes
+      - Fixes
+
+  merges:
+    pattern: "^Merge branch '(\\w+)'$"
+    pattern_maps:
+      - Source
+
+  reverts:
+    pattern: "^Revert \"([\\s\\S]*)\"$"
+    pattern_maps:
+      - Header
+
+  notes:
+    keywords:
+      - BREAKING CHANGE

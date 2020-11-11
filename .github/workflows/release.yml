@@ -1,0 +1,144 @@
+---
+
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+jobs:
+  build:
+    runs-on: self-hosted
+
+    steps:
+      - name: Get the tag version
+        id: get_tag
+        run: |
+          echo ::set-output name=tag::${GITHUB_REF#refs/tags/}
+
+      - name: Install Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: 1.15
+
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Test
+        run: go test ./...
+
+      - name: Test Race
+        run: go test -cpu=2 -race ./...
+
+      - name: Build
+        run: |
+          VERSION=${{steps.get_tag.outputs.tag}} ./build.sh
+
+      - name: Store Artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: build
+          path: build/*.zip
+
+  create-gh-release:
+    needs: build
+    runs-on: self-hosted
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - name: Get the tag version
+        id: get_tag
+        run: |
+            echo "::set-output name=tag::${GITHUB_REF#refs/tags/}"
+
+      - name: Prepare Changelog
+        run: |
+          curl -L -o git-chglog https://github.com/PhilippHeuer/git-chglog/releases/download/v1.0.0/git-chglog_linux_amd64
+          chmod +x git-chglog
+          ./git-chglog -c .chglog/release.yml -o RELEASE.MD ${{steps.get_tag.outputs.tag}}
+
+      - name: Download Artifacts
+        uses: actions/download-artifact@v2
+        with:
+          name: build
+          path: build
+
+      - name: Create Checksums And Signatures
+        uses: tristan-weil/ghaction-checksum-sign-artifact@master
+        id: checksum_sign
+        with:
+          path: build/*.zip
+          checksum_digests: sha256
+          checksum_format: bsd
+          checksum_output: one_file_per_digest
+          sign_key: ${{secrets.SIGN_KEY}}
+          sign_key_passphrase: ${{secrets.SIGN_KEY_PASSPHRASE}}
+          sign_key_fingerprint: 8DEF00BD77CD5621C34341A8E1322DEDABFA1838
+          sign_keyserver: keys.openpgp.org
+          sign_output: checksum_detach
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        env:
+          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+        with:
+          draft: false
+          prerelease: false
+          tag_name: ${{steps.get_tag.outputs.tag}}
+          name: ${{steps.get_tag.outputs.tag}}
+          body_path: RELEASE.MD
+          files: |
+            build/*.zip
+            ${{steps.checksum_sign.outputs.generated-files}}
+
+  docker-image:
+    needs: build
+    runs-on: self-hosted
+
+    steps:
+      - name: Get the tag version
+        id: get_tag
+        run: |
+          echo ::set-output name=tag::${GITHUB_REF#refs/tags/}
+
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Download Artifacts
+        uses: actions/download-artifact@v2
+        with:
+          name: build
+          path: build
+
+      - name: Unarchive
+        run: |
+          cd build
+          unzip ttserver-${{steps.get_tag.outputs.tag}}-linux-amd64.zip
+
+      - name: Set up Docker Buildx
+        id: buildx
+        uses: docker/setup-buildx-action@v1
+
+      - name: Login to GHCR
+        uses: docker/login-action@v1
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GHCR_TOKEN }}
+
+      - name: Docker Build and Push
+        uses: docker/build-push-action@v2
+        with:
+          builder: ${{ steps.buildx.outputs.name }}
+          context: .
+          file: ./Dockerfile
+          push: true
+          pull: true
+          tags: |
+            ghcr.io/tristan-weil/ttserver:latest
+            ghcr.io/tristan-weil/ttserver:${{steps.get_tag.outputs.tag}}
