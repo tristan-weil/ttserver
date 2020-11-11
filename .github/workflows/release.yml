@@ -9,7 +9,7 @@ on:
 
 jobs:
   build:
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
 
     steps:
       - name: Get the tag version
@@ -43,7 +43,7 @@ jobs:
 
   create-gh-release:
     needs: build
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
 
     steps:
       - name: Checkout
@@ -98,7 +98,7 @@ jobs:
 
   docker-image:
     needs: build
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
 
     steps:
       - name: Get the tag version
