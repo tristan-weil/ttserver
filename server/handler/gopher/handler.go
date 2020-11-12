@@ -43,30 +43,6 @@ func (f *Handler) ParseData(conn *ttconn.Connection, inbuf []byte) (route string
 		data = query.ExtData
 	}
 
-	var domain string
-	var port string
-
-	addrSplit := strings.Split(conn.LocalAddress, ":")
-	if resp_domain, ok := conn.Config.Space.Handler.Parameters["response_domain"]; ok {
-		domain = resp_domain
-	} else if conn.SNI != "" {
-		domain = conn.SNI
-	} else if len(conn.Config.Space.Listener.Domains) > 0 {
-		domain = conn.Config.Space.Listener.Domains[0]
-	} else {
-		domain = addrSplit[0]
-	}
-
-	if resp_port, ok := conn.Config.Space.Handler.Parameters["response_port"]; ok {
-		port = resp_port
-	} else {
-		addrSplit := strings.Split(conn.LocalAddress, ":")
-		port = addrSplit[1]
-	}
-
-	conn.Domain = domain
-	conn.Port = port
-
 	return query.Selector, &data, nil
 }
 

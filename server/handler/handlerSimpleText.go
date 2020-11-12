@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"io"
 	"os"
+	"strings"
 
 	ttconn "github.com/tristan-weil/ttserver/server/connection"
 )
@@ -34,6 +35,31 @@ type (
 //
 
 func SimpleTextServeConnHandlerDefaultServeConn(h SimpleTextServeConnHandler, conn *ttconn.Connection) error {
+	// update conn
+	var domain string
+	var port string
+
+	addrSplit := strings.Split(conn.LocalAddress, ":")
+	if resp_domain, ok := conn.Config.Space.Handler.Parameters["response_domain"]; ok {
+		domain = resp_domain
+	} else if conn.SNI != "" {
+		domain = conn.SNI
+	} else if len(conn.Config.Space.Listener.Domains) > 0 {
+		domain = conn.Config.Space.Listener.Domains[0]
+	} else {
+		domain = addrSplit[0]
+	}
+
+	if resp_port, ok := conn.Config.Space.Handler.Parameters["response_port"]; ok {
+		port = resp_port
+	} else {
+		addrSplit := strings.Split(conn.LocalAddress, ":")
+		port = addrSplit[1]
+	}
+
+	conn.Domain = domain
+	conn.Port = port
+
 	// read the query line
 	conn.Logger.Debugf("reading...")
 
@@ -98,6 +124,28 @@ func SimpleTextServeConnHandlerDefaultServeConn(h SimpleTextServeConnHandler, co
 }
 
 func SimpleTextServeConnHandlerDefaultServeCrontab(h SimpleTextServeConnHandler, conn *ttconn.Connection, route string, routeExtraData interface{}) error {
+	// update conn
+	var domain string
+	var port string
+
+	addrSplit := strings.Split(*conn.Config.Space.Listener.Address, ":")
+	if resp_domain, ok := conn.Config.Space.Handler.Parameters["response_domain"]; ok {
+		domain = resp_domain
+	} else if len(conn.Config.Space.Listener.Domains) > 0 {
+		domain = conn.Config.Space.Listener.Domains[0]
+	} else {
+		domain = addrSplit[0]
+	}
+
+	if resp_port, ok := conn.Config.Space.Handler.Parameters["response_port"]; ok {
+		port = resp_port
+	} else {
+		port = addrSplit[1]
+	}
+
+	conn.Domain = domain
+	conn.Port = port
+
 	if _, err := h.Process(conn, route, routeExtraData, true); err != nil {
 		return err
 	}

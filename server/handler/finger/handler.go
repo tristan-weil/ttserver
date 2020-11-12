@@ -1,8 +1,6 @@
 package finger
 
 import (
-	"strings"
-
 	"github.com/Masterminds/sprig/v3"
 	ttconn "github.com/tristan-weil/ttserver/server/connection"
 	tthandler "github.com/tristan-weil/ttserver/server/handler"
@@ -29,30 +27,6 @@ func (f *Handler) ParseData(conn *ttconn.Connection, inbuf []byte) (string, inte
 	if err != nil {
 		return "", nil, err
 	}
-
-	var domain string
-	var port string
-
-	addrSplit := strings.Split(conn.LocalAddress, ":")
-	if resp_domain, ok := conn.Config.Space.Handler.Parameters["response_domain"]; ok {
-		domain = resp_domain
-	} else if conn.SNI != "" {
-		domain = conn.SNI
-	} else if len(conn.Config.Space.Listener.Domains) > 0 {
-		domain = conn.Config.Space.Listener.Domains[0]
-	} else {
-		domain = addrSplit[0]
-	}
-
-	if resp_port, ok := conn.Config.Space.Handler.Parameters["response_port"]; ok {
-		port = resp_port
-	} else {
-		addrSplit := strings.Split(conn.LocalAddress, ":")
-		port = addrSplit[1]
-	}
-
-	conn.Domain = domain
-	conn.Port = port
 
 	return query.Username, nil, nil
 }
