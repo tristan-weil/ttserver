@@ -326,6 +326,7 @@ func doSimpleTextServeConnHandlerCustomProcess(
 			fetched, err := p.fetcher(p.uri)
 			if err != nil {
 				conn.Logger.Errorf("fetching %s for '%s' failed -> %s", p.uri, p.name, err)
+				return nil
 			}
 
 			conn.Logger.Tracef("fetching done %s for '%s'...", p.uri, p.name)
@@ -397,10 +398,14 @@ func doSimpleTextServeConnHandlerCustomProcess(
 					wgFetch.Done()
 				}()
 
-				result := poolFetch.Process(item)
+				if result := poolFetch.Process(item); result != nil {
+					conn.MutexFetch.Lock()
+					templateData[item.name] = result.(*simpleTextHandlerTemplateDataItem)
+				} else {
+					conn.MutexFetch.Lock()
+					templateData[item.name] = nil
+				}
 
-				conn.MutexFetch.Lock()
-				templateData[item.name] = result.(*simpleTextHandlerTemplateDataItem)
 			}(poolItems[i])
 		}
 
@@ -451,6 +456,13 @@ func doSimpleTextServeConnHandlerCustomProcess(
 		}
 
 		goto GOTO_ADD_TO_CACHE
+	}
+
+	// no cache if unable to fetch remote data
+	for _, v := range templateData {
+		if v == nil {
+			goto GOTO_NO_CACHE
+		}
 	}
 
 GOTO_ADD_TO_CACHE:
