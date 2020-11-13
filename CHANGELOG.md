@@ -27,7 +27,6 @@
 ### 🚀 Features
 - Initial commit
 
-[Unreleased]: https://github.com/tristan-weil/ghaction-checksum-sign-artifact/compare/v1.0.3...HEAD
-[v1.0.3]: https://github.com/tristan-weil/ghaction-checksum-sign-artifact/compare/v1.0.2...v1.0.3
-[v1.0.2]: https://github.com/tristan-weil/ghaction-checksum-sign-artifact/compare/v1.0.1...v1.0.2
-[v1.0.1]: https://github.com/tristan-weil/ghaction-checksum-sign-artifact/compare/v1.0.0...v1.0.1
+[v1.0.3]: https://github.com/tristan-weil/ttserver/compare/v1.0.2...v1.0.3
+[v1.0.2]: https://github.com/tristan-weil/ttserver/compare/v1.0.1...v1.0.2
+[v1.0.1]: https://github.com/tristan-weil/ttserver/compare/v1.0.0...v1.0.1
